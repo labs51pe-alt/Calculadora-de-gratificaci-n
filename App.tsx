@@ -121,7 +121,7 @@ const App: React.FC = () => {
           </p>
         </header>
 
-        <div className="relative overflow-hidden rounded-2xl bg-white dark:bg-slate-800/50 backdrop-blur-sm border border-slate-200 dark:border-slate-700 shadow-xl dark:shadow-2xl dark:shadow-black/20">
+        <div className="relative overflow-hidden rounded-2xl bg-white dark:bg-slate-800/50 md:backdrop-blur-sm border border-slate-200 dark:border-slate-700 shadow-xl dark:shadow-2xl dark:shadow-black/20">
             <div className="absolute top-0 left-0 -translate-x-1/3 -translate-y-1/3 w-2/3 h-2/3 rounded-full bg-gradient-to-tr from-emerald-500/10 to-cyan-500/10 dark:from-emerald-500/20 dark:to-cyan-500/20 blur-3xl"></div>
             <div className="relative grid md:grid-cols-2">
                 <CalculatorForm onCalculate={handleCalculate} onReset={handleReset} />
