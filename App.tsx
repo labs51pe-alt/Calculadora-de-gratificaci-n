@@ -1,7 +1,6 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { CalculationResult, FormData } from './types';
-import { INSURANCE_BONUS_RATE, SEMESTER_MONTHS, FAMILY_ALLOWANCE_AMOUNT } from './constants';
+import { INSURANCE_BONUS_RATE, SEMESTER_MONTHS, FAMILY_ALLOWANCE_AMOUNT, UIT_2024, INCOME_TAX_BRACKETS } from './constants';
 import CalculatorForm from './components/CalculatorForm';
 import ResultDisplay from './components/ResultDisplay';
 import ThemeToggle from './components/ThemeToggle';
@@ -39,7 +38,6 @@ const App: React.FC = () => {
       return;
     }
 
-    // 1. Calculate Remuneración Computable (Calculation Base)
     let calculationBase = data.salary;
     if (data.hasFamilyAllowance) {
       calculationBase += FAMILY_ALLOWANCE_AMOUNT;
@@ -47,32 +45,63 @@ const App: React.FC = () => {
     if (data.hasBonuses) {
       calculationBase += data.bonusAmount / SEMESTER_MONTHS;
     }
+    if (data.hasOvertime) {
+      calculationBase += data.overtimeAmount / SEMESTER_MONTHS;
+    }
 
-    // 2. Calculate Gratificación Bruta (Base Gratification)
     let baseGratificacion = (calculationBase / SEMESTER_MONTHS) * data.monthsWorked;
 
-    // 3. Adjust for Small Company Regime
     if (data.isSmallCompany) {
       baseGratificacion = baseGratificacion / 2;
     }
 
-    // 4. Calculate Bonus
     const bonusRate = INSURANCE_BONUS_RATE[data.insuranceType];
     const bonus = baseGratificacion * bonusRate;
 
-    // 5. Calculate Total
-    const totalGratificacion = baseGratificacion + bonus;
+    const grossTotalGratificacion = baseGratificacion + bonus;
+    let incomeTax = 0;
+    let netTotalGratificacion = grossTotalGratificacion;
+
+    if (data.shouldCalculateTax) {
+        const proyectadoAnual = calculationBase * 14; // 12 sueldos + 2 gratificaciones
+        const baseImponible = Math.max(0, proyectadoAnual - (7 * UIT_2024));
+
+        let impuestoAnualProyectado = 0;
+        let remainingIncome = baseImponible;
+        let previousLimit = 0;
+
+        for (const bracket of INCOME_TAX_BRACKETS) {
+            if (remainingIncome <= 0) break;
+            const bracketRange = bracket.limit - previousLimit;
+            const taxableInBracket = Math.min(remainingIncome, bracketRange);
+            impuestoAnualProyectado += taxableInBracket * bracket.rate;
+            remainingIncome -= taxableInBracket;
+            previousLimit = bracket.limit;
+        }
+        
+        if (proyectadoAnual > 0) {
+            const tasaEfectiva = impuestoAnualProyectado / proyectadoAnual;
+            incomeTax = bonus * tasaEfectiva;
+        }
+        
+        netTotalGratificacion = grossTotalGratificacion - incomeTax;
+    }
 
     setResult({
       baseGratificacion: parseFloat(baseGratificacion.toFixed(2)),
       bonus: parseFloat(bonus.toFixed(2)),
-      totalGratificacion: parseFloat(totalGratificacion.toFixed(2)),
+      grossTotalGratificacion: parseFloat(grossTotalGratificacion.toFixed(2)),
+      incomeTax: parseFloat(incomeTax.toFixed(2)),
+      netTotalGratificacion: parseFloat(netTotalGratificacion.toFixed(2)),
     });
     
-    // Scroll to results on mobile after a short delay to allow UI to update
     setTimeout(() => {
         resultRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, 100);
+  };
+
+  const handleReset = () => {
+    setResult(null);
   };
 
   return (
@@ -94,7 +123,7 @@ const App: React.FC = () => {
         <div className="relative overflow-hidden rounded-2xl bg-white dark:bg-slate-800/50 backdrop-blur-sm border border-slate-200 dark:border-slate-700 shadow-xl dark:shadow-2xl dark:shadow-black/20">
             <div className="absolute top-0 left-0 -translate-x-1/3 -translate-y-1/3 w-2/3 h-2/3 rounded-full bg-gradient-to-tr from-emerald-500/10 to-cyan-500/10 dark:from-emerald-500/20 dark:to-cyan-500/20 blur-3xl"></div>
             <div className="relative grid md:grid-cols-2">
-                <CalculatorForm onCalculate={handleCalculate} />
+                <CalculatorForm onCalculate={handleCalculate} onReset={handleReset} />
                 <div ref={resultRef} className="md:border-l border-slate-200 dark:border-slate-700/50">
                     <ResultDisplay result={result} />
                 </div>

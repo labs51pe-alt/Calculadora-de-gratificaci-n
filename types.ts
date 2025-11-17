@@ -11,10 +11,15 @@ export interface FormData {
   isSmallCompany: boolean;
   hasBonuses: boolean;
   bonusAmount: number;
+  shouldCalculateTax: boolean;
+  hasOvertime: boolean;
+  overtimeAmount: number;
 }
 
 export interface CalculationResult {
   baseGratificacion: number;
   bonus: number;
-  totalGratificacion: number;
+  grossTotalGratificacion: number;
+  incomeTax: number;
+  netTotalGratificacion: number;
 }

@@ -12,10 +12,10 @@ const formatCurrency = (value: number): string => {
     }).format(value);
 };
 
-const ResultItem: React.FC<{ label: string; value: string, isTotal?: boolean }> = ({ label, value, isTotal = false }) => (
+const ResultItem: React.FC<{ label: string; value: string, isTotal?: boolean, isDeduction?: boolean }> = ({ label, value, isTotal = false, isDeduction = false }) => (
     <div className={`flex justify-between items-center py-4 ${isTotal ? '' : 'border-b border-slate-200 dark:border-slate-700'}`}>
         <span className="text-slate-500 dark:text-slate-400">{label}</span>
-        <span className={`font-semibold ${isTotal ? 'text-2xl text-emerald-500 dark:text-emerald-400' : 'text-lg text-slate-800 dark:text-white'}`}>{value}</span>
+        <span className={`font-semibold ${isTotal ? 'text-2xl text-emerald-500 dark:text-emerald-400' : 'text-lg'} ${isDeduction ? 'text-red-500 dark:text-red-400' : 'text-slate-800 dark:text-white'}`}>{value}</span>
     </div>
 );
 
@@ -28,9 +28,17 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({ result }) => {
             <h2 className="text-2xl font-bold text-center text-slate-800 dark:text-slate-200 mb-6">Resultado del Cálculo</h2>
             <div className="bg-white dark:bg-slate-800/50 rounded-lg p-6 border border-slate-200 dark:border-transparent">
                 <ResultItem label="Gratificación Base" value={formatCurrency(result.baseGratificacion)} />
-                {/* FIX: Corrected a syntax error in the value prop. */}
                 <ResultItem label="Bonificación Extraordinaria" value={formatCurrency(result.bonus)} />
-                <ResultItem label="Total a Recibir" value={formatCurrency(result.totalGratificacion)} isTotal={true} />
+                
+                {result.incomeTax > 0 ? (
+                    <>
+                        <ResultItem label="Total Bruto" value={formatCurrency(result.grossTotalGratificacion)} />
+                        <ResultItem label="Imp. a la Renta (5ta Cat.)" value={`- ${formatCurrency(result.incomeTax)}`} isDeduction={true} />
+                        <ResultItem label="Total Neto a Recibir" value={formatCurrency(result.netTotalGratificacion)} isTotal={true} />
+                    </>
+                ) : (
+                    <ResultItem label="Total a Recibir" value={formatCurrency(result.grossTotalGratificacion)} isTotal={true} />
+                )}
             </div>
         </div>
       ) : (

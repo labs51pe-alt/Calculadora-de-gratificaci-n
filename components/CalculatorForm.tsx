@@ -3,6 +3,7 @@ import { InsuranceType, FormData } from '../types';
 
 interface CalculatorFormProps {
   onCalculate: (data: FormData) => void;
+  onReset: () => void;
 }
 
 const ToggleSwitch: React.FC<{
@@ -46,7 +47,7 @@ const InfoPanel: React.FC<{ children: React.ReactNode }> = ({ children }) => (
 );
 
 
-const CalculatorForm: React.FC<CalculatorFormProps> = ({ onCalculate }) => {
+const CalculatorForm: React.FC<CalculatorFormProps> = ({ onCalculate, onReset }) => {
   const [salary, setSalary] = useState<string>('');
   const [monthsWorked, setMonthsWorked] = useState<string>('6');
   const [insuranceType, setInsuranceType] = useState<InsuranceType>(InsuranceType.EsSalud);
@@ -56,12 +57,16 @@ const CalculatorForm: React.FC<CalculatorFormProps> = ({ onCalculate }) => {
   const [isSmallCompany, setIsSmallCompany] = useState<boolean>(false);
   const [hasBonuses, setHasBonuses] = useState<boolean>(false);
   const [bonusAmount, setBonusAmount] = useState<string>('');
+  const [hasOvertime, setHasOvertime] = useState<boolean>(false);
+  const [overtimeAmount, setOvertimeAmount] = useState<string>('');
+  const [shouldCalculateTax, setShouldCalculateTax] = useState<boolean>(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const parsedSalary = parseFloat(salary);
     const parsedMonths = parseInt(monthsWorked, 10);
     const parsedBonusAmount = parseFloat(bonusAmount) || 0;
+    const parsedOvertimeAmount = parseFloat(overtimeAmount) || 0;
 
     if (isNaN(parsedSalary) || parsedSalary <= 0) {
       setError('Por favor, ingrese un sueldo mensual válido.');
@@ -69,6 +74,10 @@ const CalculatorForm: React.FC<CalculatorFormProps> = ({ onCalculate }) => {
     }
      if (hasBonuses && (isNaN(parsedBonusAmount) || parsedBonusAmount <= 0)) {
         setError('Por favor, ingrese un monto de bonos válido.');
+        return;
+    }
+    if (hasOvertime && (isNaN(parsedOvertimeAmount) || parsedOvertimeAmount <= 0)) {
+        setError('Por favor, ingrese un monto de horas extras válido.');
         return;
     }
     setError(null);
@@ -81,9 +90,27 @@ const CalculatorForm: React.FC<CalculatorFormProps> = ({ onCalculate }) => {
       isSmallCompany,
       hasBonuses,
       bonusAmount: parsedBonusAmount,
+      hasOvertime,
+      overtimeAmount: parsedOvertimeAmount,
+      shouldCalculateTax,
     });
   };
   
+  const handleReset = () => {
+    setSalary('');
+    setMonthsWorked('6');
+    setInsuranceType(InsuranceType.EsSalud);
+    setError(null);
+    setHasFamilyAllowance(false);
+    setIsSmallCompany(false);
+    setHasBonuses(false);
+    setBonusAmount('');
+    setHasOvertime(false);
+    setOvertimeAmount('');
+    setShouldCalculateTax(false);
+    onReset();
+  };
+
   const handleNumericInputChange = (setter: React.Dispatch<React.SetStateAction<string>>) => (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     if (value === '' || /^\d*\.?\d*$/.test(value)) {
@@ -155,6 +182,24 @@ const CalculatorForm: React.FC<CalculatorFormProps> = ({ onCalculate }) => {
               />
               {hasBonuses && <InfoPanel>El promedio de tus bonos en el semestre se suma a la base de cálculo. No incluyas bonos extraordinarios.</InfoPanel>}
             </div>
+             <div>
+              <ToggleSwitch 
+                id="overtime" 
+                label="¿Horas Extras en 3 o más meses del semestre?" 
+                checked={hasOvertime} 
+                onChange={setHasOvertime}
+              />
+              {hasOvertime && <InfoPanel>Si la respuesta es sí, activa esta opción e ingresa el monto total que recibiste por horas extras en los últimos 6 meses.</InfoPanel>}
+            </div>
+             <div>
+              <ToggleSwitch 
+                id="calculate-tax" 
+                label="¿Estimar Imp. a la Renta (5ta Cat.)?" 
+                checked={shouldCalculateTax} 
+                onChange={setShouldCalculateTax}
+              />
+              {shouldCalculateTax && <InfoPanel>La gratificación está exonerada, pero la bonificación no. Este es un cálculo proyectado para estimar la retención sobre tu bonificación.</InfoPanel>}
+            </div>
           </div>
 
           {hasBonuses && (
@@ -169,6 +214,24 @@ const CalculatorForm: React.FC<CalculatorFormProps> = ({ onCalculate }) => {
                     value={bonusAmount}
                     onChange={handleNumericInputChange(setBonusAmount)}
                     placeholder="Ej: 1200"
+                    className="w-full bg-slate-100 dark:bg-slate-900/50 border border-slate-300 dark:border-slate-700 rounded-lg py-2.5 px-4 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition"
+                    required
+                />
+            </div>
+          )}
+
+          {hasOvertime && (
+            <div className="animate-fade-in">
+                <label htmlFor="overtimeAmount" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    Monto total de Horas Extras (últimos 6 meses)
+                </label>
+                <input
+                    type="text"
+                    id="overtimeAmount"
+                    inputMode="decimal"
+                    value={overtimeAmount}
+                    onChange={handleNumericInputChange(setOvertimeAmount)}
+                    placeholder="Ej: 600"
                     className="w-full bg-slate-100 dark:bg-slate-900/50 border border-slate-300 dark:border-slate-700 rounded-lg py-2.5 px-4 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition"
                     required
                 />
@@ -201,12 +264,21 @@ const CalculatorForm: React.FC<CalculatorFormProps> = ({ onCalculate }) => {
       </div>
       
       <div className="md:static fixed bottom-0 left-0 right-0 p-4 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border-t border-slate-200 dark:border-slate-700/50 md:p-0 md:bg-transparent md:dark:bg-transparent md:backdrop-blur-none md:border-none">
-          <button
-            type="submit"
-            className="w-full bg-gradient-to-r from-emerald-500 to-cyan-500 text-white font-bold py-3 px-4 rounded-lg hover:opacity-90 focus:outline-none focus:ring-4 focus:ring-emerald-500/50 transition-all duration-300 transform md:hover:scale-105"
-          >
-            Calcular Gratificación
-          </button>
+          <div className="flex items-center gap-3 md:gap-4">
+              <button
+                type="button"
+                onClick={handleReset}
+                className="flex-1 w-full bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold py-3 px-4 rounded-lg hover:bg-slate-300 dark:hover:bg-slate-600 focus:outline-none focus:ring-4 focus:ring-slate-500/50 transition-colors duration-300"
+              >
+                Limpiar
+              </button>
+              <button
+                type="submit"
+                className="flex-[2] w-full bg-gradient-to-r from-emerald-500 to-cyan-500 text-white font-bold py-3 px-4 rounded-lg hover:opacity-90 focus:outline-none focus:ring-4 focus:ring-emerald-500/50 transition-all duration-300 transform md:hover:scale-105"
+              >
+                Calcular Gratificación
+              </button>
+          </div>
       </div>
 
     </form>
