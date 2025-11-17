@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { CalculationResult } from '../types';
 
@@ -13,7 +14,7 @@ const formatCurrency = (value: number): string => {
 };
 
 const ResultItem: React.FC<{ label: string; value: string, isTotal?: boolean, isDeduction?: boolean }> = ({ label, value, isTotal = false, isDeduction = false }) => (
-    <div className={`flex justify-between items-center py-2.5 sm:py-4 ${isTotal ? 'pt-3 sm:pt-4' : 'border-b border-slate-200 dark:border-slate-700'}`}>
+    <div className={`flex justify-between items-center py-2 sm:py-3 ${isTotal ? 'pt-2 sm:pt-3' : 'border-b border-slate-200 dark:border-slate-700'}`}>
         <span className="text-sm text-slate-500 dark:text-slate-400">{label}</span>
         <span className={`font-semibold text-right ${isTotal ? 'text-lg sm:text-2xl text-emerald-500 dark:text-emerald-400' : 'text-base sm:text-lg'} ${isDeduction ? 'text-red-500 dark:text-red-400' : 'text-slate-800 dark:text-white'}`}>{value}</span>
     </div>
@@ -22,11 +23,11 @@ const ResultItem: React.FC<{ label: string; value: string, isTotal?: boolean, is
 
 const ResultDisplay: React.FC<ResultDisplayProps> = ({ result }) => {
   return (
-    <div className="bg-slate-50 dark:bg-slate-900/60 p-4 sm:p-8 flex flex-col justify-center md:min-h-full">
+    <div className="bg-slate-50 dark:bg-slate-900/60 p-4 sm:p-6 flex flex-col justify-center md:min-h-full">
       {result ? (
         <div className="animate-fade-in">
             <h2 className="text-lg sm:text-2xl font-bold text-center text-slate-800 dark:text-slate-200 mb-2 sm:mb-4">Resultado del Cálculo</h2>
-            <div className="bg-white dark:bg-slate-800/50 rounded-lg p-3 sm:p-6 border border-slate-200 dark:border-transparent">
+            <div className="bg-white dark:bg-slate-800/50 rounded-lg p-3 sm:p-5 border border-slate-200 dark:border-transparent">
                 <ResultItem label="Gratificación Base" value={formatCurrency(result.baseGratificacion)} />
                 <ResultItem label="Bonificación Extraordinaria" value={formatCurrency(result.bonus)} />
                 
@@ -42,7 +43,7 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({ result }) => {
             </div>
         </div>
       ) : (
-        <div className="text-center text-slate-500 flex flex-col items-center justify-center py-12">
+        <div className="text-center text-slate-500 flex flex-col items-center justify-center py-8">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 sm:h-16 sm:w-16 mb-3 opacity-30 text-slate-400 dark:text-current" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
             </svg>
