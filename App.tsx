@@ -106,8 +106,8 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-100 dark:bg-gradient-to-br dark:from-slate-900 dark:to-gray-900 text-slate-800 dark:text-white p-4 sm:p-6 lg:p-8 flex flex-col items-center justify-center transition-colors duration-300">
-      <main className="w-full max-w-4xl relative pb-24 md:pb-6">
+    <div className="min-h-screen bg-slate-100 dark:bg-gradient-to-br dark:from-slate-900 dark:to-gray-900 text-slate-800 dark:text-white p-4 sm:p-6 lg:p-8 flex flex-col items-center justify-start transition-colors duration-300">
+      <main className="w-full max-w-4xl relative pt-6 pb-32 md:pb-6">
         <div className="absolute top-0 right-0 z-10">
             <ThemeToggle theme={theme} onToggle={handleToggleTheme} />
         </div>

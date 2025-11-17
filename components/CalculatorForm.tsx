@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { InsuranceType, FormData } from '../types';
 
@@ -120,7 +121,7 @@ const CalculatorForm: React.FC<CalculatorFormProps> = ({ onCalculate, onReset })
 
   return (
     <form onSubmit={handleSubmit} className="p-6 sm:p-8 relative">
-      <div className="space-y-6 pb-20 md:pb-0">
+      <div className="space-y-6 pb-28 md:pb-0">
           <div>
             <label htmlFor="salary" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
               Sueldo Mensual Bruto (S/)
