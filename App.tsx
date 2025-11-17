@@ -1,0 +1,117 @@
+
+import React, { useState, useEffect, useRef } from 'react';
+import { CalculationResult, FormData } from './types';
+import { INSURANCE_BONUS_RATE, SEMESTER_MONTHS, FAMILY_ALLOWANCE_AMOUNT } from './constants';
+import CalculatorForm from './components/CalculatorForm';
+import ResultDisplay from './components/ResultDisplay';
+import ThemeToggle from './components/ThemeToggle';
+
+const App: React.FC = () => {
+  const [result, setResult] = useState<CalculationResult | null>(null);
+  const resultRef = useRef<HTMLDivElement>(null);
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+    // Esta lógica DEBE coincidir con el script en línea en index.html para evitar errores de hidratación.
+    if (typeof window !== 'undefined') {
+        if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+          return 'dark';
+        }
+    }
+    return 'light';
+  });
+
+  useEffect(() => {
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
+    }
+  }, [theme]);
+
+  const handleToggleTheme = () => {
+    setTheme(prevTheme => prevTheme === 'dark' ? 'light' : 'dark');
+  };
+
+  const handleCalculate = (data: FormData) => {
+    if (!data.salary || !data.monthsWorked) {
+      setResult(null);
+      return;
+    }
+
+    // 1. Calculate Remuneración Computable (Calculation Base)
+    let calculationBase = data.salary;
+    if (data.hasFamilyAllowance) {
+      calculationBase += FAMILY_ALLOWANCE_AMOUNT;
+    }
+    if (data.hasBonuses) {
+      calculationBase += data.bonusAmount / SEMESTER_MONTHS;
+    }
+
+    // 2. Calculate Gratificación Bruta (Base Gratification)
+    let baseGratificacion = (calculationBase / SEMESTER_MONTHS) * data.monthsWorked;
+
+    // 3. Adjust for Small Company Regime
+    if (data.isSmallCompany) {
+      baseGratificacion = baseGratificacion / 2;
+    }
+
+    // 4. Calculate Bonus
+    const bonusRate = INSURANCE_BONUS_RATE[data.insuranceType];
+    const bonus = baseGratificacion * bonusRate;
+
+    // 5. Calculate Total
+    const totalGratificacion = baseGratificacion + bonus;
+
+    setResult({
+      baseGratificacion: parseFloat(baseGratificacion.toFixed(2)),
+      bonus: parseFloat(bonus.toFixed(2)),
+      totalGratificacion: parseFloat(totalGratificacion.toFixed(2)),
+    });
+    
+    // Scroll to results on mobile after a short delay to allow UI to update
+    setTimeout(() => {
+        resultRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, 100);
+  };
+
+  return (
+    <div className="min-h-screen bg-slate-100 dark:bg-gradient-to-br dark:from-slate-900 dark:to-gray-900 text-slate-800 dark:text-white p-4 sm:p-6 lg:p-8 flex flex-col items-center justify-center transition-colors duration-300">
+      <main className="w-full max-w-4xl relative">
+        <div className="absolute top-0 right-0 z-10">
+            <ThemeToggle theme={theme} onToggle={handleToggleTheme} />
+        </div>
+
+        <header className="text-center mb-8">
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-emerald-500 to-cyan-500">
+            Calculadora de Gratificación
+          </h1>
+          <p className="mt-2 text-base sm:text-lg text-slate-600 dark:text-slate-400">
+            Estima tu gratificación en Perú de forma rápida y sencilla.
+          </p>
+        </header>
+
+        <div className="relative overflow-hidden rounded-2xl bg-white dark:bg-slate-800/50 backdrop-blur-sm border border-slate-200 dark:border-slate-700 shadow-xl dark:shadow-2xl dark:shadow-black/20">
+            <div className="absolute top-0 left-0 -translate-x-1/3 -translate-y-1/3 w-2/3 h-2/3 rounded-full bg-gradient-to-tr from-emerald-500/10 to-cyan-500/10 dark:from-emerald-500/20 dark:to-cyan-500/20 blur-3xl"></div>
+            <div className="relative grid md:grid-cols-2">
+                <CalculatorForm onCalculate={handleCalculate} />
+                <div ref={resultRef} className="md:border-l border-slate-200 dark:border-slate-700/50">
+                    <ResultDisplay result={result} />
+                </div>
+            </div>
+        </div>
+
+        <footer className="text-center mt-8 text-slate-600 dark:text-slate-500 text-sm">
+          <p>
+            <strong>Nota:</strong> Esta es una calculadora referencial. El monto puede variar por otros factores como el régimen de la empresa.
+          </p>
+          <p className="mt-2">
+            Hecho con ❤️ por MagoPe
+          </p>
+        </footer>
+      </main>
+    </div>
+  );
+};
+
+export default App;

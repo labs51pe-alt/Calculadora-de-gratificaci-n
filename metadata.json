@@ -1,0 +1,5 @@
+{
+  "name": "Calculadora de Gratificación Perú",
+  "description": "Una aplicación para calcular la gratificación en Perú, considerando el sueldo mensual, los meses trabajados en el semestre y el tipo de seguro (EsSalud o EPS).",
+  "requestFramePermissions": []
+}
