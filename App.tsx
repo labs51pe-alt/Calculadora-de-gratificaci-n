@@ -39,23 +39,25 @@ const App: React.FC = () => {
       return;
     }
 
-    let calculationBase = data.salary;
-    if (data.hasFamilyAllowance) {
-      calculationBase += FAMILY_ALLOWANCE_AMOUNT;
-    }
-    if (data.hasBonuses) {
-      calculationBase += data.bonusAmount / SEMESTER_MONTHS;
-    }
-    if (data.hasOvertime) {
-      calculationBase += data.overtimeAmount / SEMESTER_MONTHS;
-    }
+    // 1. Calcular componentes individuales
+    const salaryInput = data.salary;
+    const familyAllowanceVal = data.hasFamilyAllowance ? FAMILY_ALLOWANCE_AMOUNT : 0;
+    const avgBonusesVal = data.hasBonuses ? data.bonusAmount / SEMESTER_MONTHS : 0;
+    const avgOvertimeVal = data.hasOvertime ? data.overtimeAmount / SEMESTER_MONTHS : 0;
 
-    let baseGratificacion = (calculationBase / SEMESTER_MONTHS) * data.monthsWorked;
+    // 2. Sumar para obtener la Remuneración Computable total
+    const totalComputationBase = salaryInput + familyAllowanceVal + avgBonusesVal + avgOvertimeVal;
 
+    // 3. Calcular la gratificación base proporcional a los meses trabajados
+    // Si es pequeña empresa, la base es la mitad
+    let baseForCalculation = totalComputationBase;
     if (data.isSmallCompany) {
-      baseGratificacion = baseGratificacion / 2;
+        baseForCalculation = baseForCalculation / 2;
     }
 
+    const baseGratificacion = (baseForCalculation / SEMESTER_MONTHS) * data.monthsWorked;
+
+    // 4. Calcular bono (9% o 6.75%)
     const bonusRate = INSURANCE_BONUS_RATE[data.insuranceType];
     const bonus = baseGratificacion * bonusRate;
 
@@ -63,8 +65,9 @@ const App: React.FC = () => {
     let incomeTax = 0;
     let netTotalGratificacion = grossTotalGratificacion;
 
+    // 5. Calcular Renta (Proyección)
     if (data.shouldCalculateTax) {
-        const proyectadoAnual = calculationBase * 14; // 12 sueldos + 2 gratificaciones
+        const proyectadoAnual = totalComputationBase * 14; // 12 sueldos + 2 gratificaciones (usando la base completa)
         const baseImponible = Math.max(0, proyectadoAnual - (7 * UIT_2024));
 
         let impuestoAnualProyectado = 0;
@@ -82,18 +85,29 @@ const App: React.FC = () => {
         
         if (proyectadoAnual > 0) {
             const tasaEfectiva = impuestoAnualProyectado / proyectadoAnual;
-            incomeTax = bonus * tasaEfectiva;
+            incomeTax = bonus * tasaEfectiva; // La renta se aplica usualmente sobre el exceso o bonos en estos cálculos rápidos, aquí aplicamos tasa efectiva al bono extraordinario que es lo gravable si la grati está exonerada
         }
         
         netTotalGratificacion = grossTotalGratificacion - incomeTax;
     }
 
     setResult({
+      // Totales
       baseGratificacion: parseFloat(baseGratificacion.toFixed(2)),
       bonus: parseFloat(bonus.toFixed(2)),
       grossTotalGratificacion: parseFloat(grossTotalGratificacion.toFixed(2)),
       incomeTax: parseFloat(incomeTax.toFixed(2)),
       netTotalGratificacion: parseFloat(netTotalGratificacion.toFixed(2)),
+      
+      // Desglose
+      salaryInput,
+      familyAllowanceVal: parseFloat(familyAllowanceVal.toFixed(2)),
+      avgBonusesVal: parseFloat(avgBonusesVal.toFixed(2)),
+      avgOvertimeVal: parseFloat(avgOvertimeVal.toFixed(2)),
+      totalComputationBase: parseFloat(totalComputationBase.toFixed(2)),
+      insuranceRate: bonusRate,
+      monthsWorked: data.monthsWorked,
+      isSmallCompany: data.isSmallCompany
     });
     
     setTimeout(() => {

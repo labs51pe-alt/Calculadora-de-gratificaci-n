@@ -17,9 +17,20 @@ export interface FormData {
 }
 
 export interface CalculationResult {
+  // Totales finales
   baseGratificacion: number;
   bonus: number;
   grossTotalGratificacion: number;
   incomeTax: number;
   netTotalGratificacion: number;
+  
+  // Desglose para el detalle
+  salaryInput: number;
+  familyAllowanceVal: number;
+  avgBonusesVal: number;
+  avgOvertimeVal: number;
+  totalComputationBase: number; // La suma de todo lo anterior
+  insuranceRate: number;
+  monthsWorked: number;
+  isSmallCompany: boolean;
 }
